@@ -8,7 +8,7 @@ repository = "https://thunderstore.io"
 namespace = "boxofbiscuits97"
 name = "ItemStats"
 description = "See statistics of the selected item in your inventory!"
-websiteUrl = "" # TODO: Add a link to your mod repository here (optional)
+websiteUrl = "https://github.com/Boxofbiscuits97/PEAK-ItemStats"
 containsNsfwContent = false
 
 [package.dependencies]

@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.1
+- Added Link to Github Repo
+
 ## 0.3.0
 - Recompiled checks to mitigate errors after the Mesa Update
 
