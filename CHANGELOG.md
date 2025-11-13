@@ -3,7 +3,7 @@
 ## 0.4.0
 - Added Spores Stat
 - Added Invincibility Stat
-- Fixed Infinite Stamina Stat (Lolipop)
+- Fixed Infinite Stamina Stat (Lollipop)
 - Fixed Faster Boi Stat (Energy Drink)
 
 ## 0.3.1
