@@ -1,7 +1,9 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using ExitGames.Client.Photon.StructWrapping;
 using HarmonyLib;
+using Peak.Afflictions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -34,6 +36,7 @@ public static class ItemStats
     private static InventoryItemUI instance = new();
     private static GameObject? templateStat;
     private static float rainbowHue = 0f;
+    private static float colorLerp = -1f;
     private static int index = 0;
 
     public static string precentSign = "%";
@@ -57,7 +60,10 @@ public static class ItemStats
         AddNewStat(out GameObject sleepyStat, out TextMeshProUGUI sleepyTMP, "GAME/GUIManager/Canvas_HUD/BarGroup/Bar/LayoutGroup/Sleepy/Icon", "sleepyStat", CharacterAfflictions.STATUSTYPE.Drowsy);
         AddNewStat(out GameObject heatStat, out TextMeshProUGUI heatTMP, "GAME/GUIManager/Canvas_HUD/BarGroup/Bar/LayoutGroup/Heat/Icon", "heatStat", CharacterAfflictions.STATUSTYPE.Hot);
         AddNewStat(out GameObject curseStat, out TextMeshProUGUI curseTMP, "GAME/GUIManager/Canvas_HUD/BarGroup/Bar/LayoutGroup/Curse/Icon", "curseStat", CharacterAfflictions.STATUSTYPE.Curse);
+        AddNewStat(out GameObject sporesStat, out TextMeshProUGUI SporesTMP, "GAME/GUIManager/Canvas_HUD/BarGroup/Bar/LayoutGroup/Spores/Icon", "sporesStat", CharacterAfflictions.STATUSTYPE.Spores);
         AddNewStat(out GameObject infiniteStaminaStat, out TextMeshProUGUI infiniteStaminaTMP, "GAME/GUIManager/Canvas_HUD/BarGroup/ExtraStaminaBar/Icon", "infiniteStaminaStat");
+        AddNewStat(out GameObject fasterBoiStat, out TextMeshProUGUI fasterBoiTMP, "GAME/GUIManager/Canvas_HUD/BarGroup/ExtraStaminaBar/Icon", "fasterBoiStat");
+        AddNewStat(out GameObject invincibilityStat, out TextMeshProUGUI invincibilityTMP, "GAME/GUIManager/Canvas_HUD/BarGroup/Bar/OutlineMask/Outline/Shield/ShieldIcon", "invincibilityStat");
 
         AddNewStat(out GameObject poisonStat, out TextMeshProUGUI poisonTMP, "GAME/GUIManager/Canvas_HUD/BarGroup/Bar/LayoutGroup/Poison/Icon", "poisonStat", CharacterAfflictions.STATUSTYPE.Poison);
 
@@ -68,7 +74,7 @@ public static class ItemStats
         if (!slotGameObject.transform.Find("Name").GetComponent<TextMeshProUGUI>().enabled) return;
 
         Action_InflictPoison inflictPoisonComponent = item.gameObject.GetComponent<Action_InflictPoison>();
-        if (inflictPoisonComponent)
+        if (inflictPoisonComponent && inflictPoisonComponent.enabled)
         {
             int incriment = 1;
             float value = inflictPoisonComponent.poisonPerSecond * inflictPoisonComponent.inflictionTime * 100;
@@ -99,23 +105,61 @@ public static class ItemStats
             UpdateStats(ref extraStaminaStat, ref index);
         }
 
-        Action_ApplyInfiniteStamina infiniteStaminaComponent = item.gameObject.GetComponent<Action_ApplyInfiniteStamina>();
-        if (infiniteStaminaComponent)
+        Action_ApplyAffliction[] applyAfflictionComponents = item.gameObject.GetComponents<Action_ApplyAffliction>();
+        foreach (Action_ApplyAffliction applyAfflictionComponent in applyAfflictionComponents)
         {
-            Image infiniteStaminaImage = infiniteStaminaStat.GetComponent<Image>();
-            rainbowHue += Time.deltaTime * 0.1f;
-            if (rainbowHue > 1f) rainbowHue -= 1f;
-            Color rainbow = Color.HSVToRGB(rainbowHue, 1f, 1f);
-            infiniteStaminaImage.color = rainbow;
-            infiniteStaminaTMP.color = rainbow;
+            if (!applyAfflictionComponent.enabled) continue;
 
-            string drowsyPercentage = "+" + (infiniteStaminaComponent.drowsyAmount * 100).ToString() + precentSign; ;
-            sleepyTMP.text = drowsyPercentage;
-            UpdateStats(ref sleepyStat, ref index);
+            Affliction.AfflictionType afflictionType = applyAfflictionComponent.affliction.GetAfflictionType();
 
-            string staminaTime = infiniteStaminaComponent.buffTime.ToString() + "sec"; ;
-            infiniteStaminaTMP.text = staminaTime;
-            UpdateStats(ref infiniteStaminaStat, ref index);
+            if (afflictionType == Affliction.AfflictionType.InfiniteStamina)
+            {
+                Image infiniteStaminaImage = infiniteStaminaStat.GetComponent<Image>();
+                rainbowHue += Time.deltaTime * 0.1f;
+                if (rainbowHue > 1f) rainbowHue -= 1f;
+                Color color = Color.HSVToRGB(rainbowHue, 1f, 1f);
+                infiniteStaminaImage.color = color;
+                infiniteStaminaTMP.color = color;
+
+                Affliction_InfiniteStamina infiniteStamina = (Affliction_InfiniteStamina)applyAfflictionComponent.affliction;
+                Affliction_AdjustDrowsyOverTime adjustDrowsyOverTime = (Affliction_AdjustDrowsyOverTime)infiniteStamina.drowsyAffliction;
+                float drowsyTime = infiniteStamina.drowsyAffliction.totalTime * adjustDrowsyOverTime.statusPerSecond;
+
+                string drowsyPercentage = "+" + Mathf.Round(drowsyTime * 100).ToString() + precentSign; ;
+                sleepyTMP.text = drowsyPercentage;
+                UpdateStats(ref sleepyStat, ref index);
+
+                string staminaTime = applyAfflictionComponent.affliction.totalTime.ToString() + "sec"; ;
+                infiniteStaminaTMP.text = staminaTime;
+                UpdateStats(ref infiniteStaminaStat, ref index);
+            }
+
+            if (afflictionType == Affliction.AfflictionType.FasterBoi)
+            {
+                Image fasterBoiImage = fasterBoiStat.GetComponent<Image>();
+                colorLerp += Time.deltaTime * 2f;
+                if (colorLerp > 1f) colorLerp -= 2f;
+                Color color = Color.Lerp(extraStaminaTMP.color, coldTMP.color, Mathf.Abs(colorLerp));
+                fasterBoiImage.color = color;
+                fasterBoiTMP.color = color;
+
+                Affliction_FasterBoi fasterBoi = (Affliction_FasterBoi)applyAfflictionComponent.affliction;
+
+                string drowsyPercentage = "+" + Mathf.Round(fasterBoi.drowsyOnEnd * 100).ToString() + precentSign;
+                sleepyTMP.text = drowsyPercentage;
+                UpdateStats(ref sleepyStat, ref index);
+
+                string staminaTime = fasterBoi.totalTime.ToString() + "sec"; ;
+                fasterBoiTMP.text = staminaTime;
+                UpdateStats(ref fasterBoiStat, ref index);
+            }
+
+            if (afflictionType == Affliction.AfflictionType.Invincibility)
+            {
+                string invincibilityTime = applyAfflictionComponent.affliction.totalTime.ToString() + "sec";
+                invincibilityTMP.text = invincibilityTime;
+                UpdateStats(ref invincibilityStat, ref index);
+            }
         }
     }
 
@@ -214,6 +258,8 @@ public static class ItemStats
         Action_ModifyStatus[] statusComponents = item.gameObject.GetComponents<Action_ModifyStatus>();
         foreach (Action_ModifyStatus statusComponent in statusComponents)
         {
+            if (!statusComponent.enabled) continue;
+
             float value = statusComponent.changeAmount * 100;
             if (value == 0) continue;
             string changePrecent = Mathf.Round(value).ToString() + precentSign;
