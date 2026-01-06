@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.5.0
+- Added Font Size Config Option
+
 ## 0.4.0
 - Added Spores Stat
 - Added Invincibility Stat

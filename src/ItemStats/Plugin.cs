@@ -14,14 +14,18 @@ namespace ItemStats;
 public partial class Plugin : BaseUnityPlugin
 {
     internal static ManualLogSource Log { get; private set; } = null!;
-    private static ConfigEntry<bool>? showPercentageSign;
+    private static ConfigEntry<bool>? _showPercentageSign;
+    private static ConfigEntry<int>? _fontSize;
 
     private void Awake()
     {
         Log = Logger;
 
-        showPercentageSign = Config.Bind("Display", "ShowPercentageSign", true, "Whether to show a percentage sign (%) after numeric values.");
-        if (!showPercentageSign.Value) ItemStats.precentSign = "";
+        _showPercentageSign = Config.Bind("Display", "ShowPercentageSign", true, "Whether to show a percentage sign (%) after numeric values.");
+        _fontSize = Config.Bind("Display", "FontSize", 20, new ConfigDescription("Font size for item stat text.", (AcceptableValueBase)(object)new AcceptableValueRange<int>(20, 32)));
+
+        if (!_showPercentageSign.Value) ItemStats.precentSign = "";
+        ItemStats.fontSize = _fontSize.Value;
 
         Harmony.CreateAndPatchAll(typeof(ItemStats));
         
@@ -40,6 +44,7 @@ public static class ItemStats
     private static int index = 0;
 
     public static string precentSign = "%";
+    public static int fontSize = 20;
 
     [HarmonyPrefix]
     [HarmonyPatch(typeof(InventoryItemUI), nameof(InventoryItemUI.SetItem))]
@@ -195,6 +200,8 @@ public static class ItemStats
             hungerText.transform.localPosition = new Vector3(-75f, -25f, 0f);
             hungerTMP = hungerText.GetComponent<TextMeshProUGUI>();
             hungerTMP.text = "-100%";
+            hungerTMP.enableAutoSizing = false;
+            hungerTMP.fontSize = fontSize;
             hungerTMP.outlineWidth = 0.1f;
             hungerTMP.alignment = TMPro.TextAlignmentOptions.Right;
             hungerTMP.enabled = true;
@@ -282,9 +289,9 @@ public static class ItemStats
         Vector3 position;
         icon.SetActive(true);
         index += incriment;
-        
-        if (!instance.isTemporarySlot) position = new Vector3(60f, 80f + 20 * index, 0f);
-        else position = new Vector3(20f, 120f + 20 * index, 0f);
+
+        if (!instance.isTemporarySlot) position = new Vector3(60f, 80f + fontSize * index, 0f);
+        else position = new Vector3(20f, 120f + fontSize * index, 0f);
 
         icon.transform.localPosition = position;
     } 
