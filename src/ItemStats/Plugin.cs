@@ -14,18 +14,15 @@ namespace ItemStats;
 public partial class Plugin : BaseUnityPlugin
 {
     internal static ManualLogSource Log { get; private set; } = null!;
-    private static ConfigEntry<bool>? _showPercentageSign;
-    private static ConfigEntry<int>? _fontSize;
+    public static ConfigEntry<bool>? _showPercentageSign;
+    public static ConfigEntry<int>? _fontSize;
 
     private void Awake()
     {
         Log = Logger;
 
-        _showPercentageSign = Config.Bind("Display", "ShowPercentageSign", true, "Whether to show a percentage sign (%) after numeric values.");
+        _showPercentageSign = Config.Bind("Display", "ShowPercentageSign", true, "Display stat values as a percentage out of 100 instead of number of 'ticks' out of 40.");
         _fontSize = Config.Bind("Display", "FontSize", 20, new ConfigDescription("Font size for item stat text.", (AcceptableValueBase)(object)new AcceptableValueRange<int>(20, 32)));
-
-        if (!_showPercentageSign.Value) ItemStats.percentSign = "";
-        ItemStats.fontSize = _fontSize.Value;
 
         Harmony.CreateAndPatchAll(typeof(ItemStats));
 
@@ -55,6 +52,22 @@ public static class ItemStats
         GameObject slotGameObject = __instance.fuelBar.transform.parent.gameObject;
 
         if (__instance.isBackpack) return;
+
+        if (Plugin._fontSize == null)
+            fontSize = 20;
+        else
+            fontSize = Plugin._fontSize.Value;
+        
+        if (Plugin._showPercentageSign != null && !Plugin._showPercentageSign.Value)
+        {
+            percentSign = "";
+            unitFactor = 40;
+        }
+        else
+        {
+            percentSign = "%";
+            unitFactor = 100;
+        }
 
         Initialize(out GameObject hungerStat, out GameObject hungerText, out TextMeshProUGUI hungerTMP);
 
@@ -268,6 +281,7 @@ public static class ItemStats
 
         objectTMP = objectIcon.transform.GetChild(0).GetComponent<TextMeshProUGUI>();
         objectTMP.text = "0";
+        objectTMP.fontSize = fontSize;
 
         objectIcon.SetActive(false);
 
