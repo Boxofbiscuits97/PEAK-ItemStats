@@ -44,6 +44,7 @@ public static class ItemStats
     private static int index = 0;
 
     public static string percentSign = "%";
+    public static int unitFactor = 100;
     public static int fontSize = 20;
 
     [HarmonyPrefix]
@@ -83,7 +84,7 @@ public static class ItemStats
         if (inflictPoisonComponent && inflictPoisonComponent.enabled)
         {
             int increment = 1;
-            float value = inflictPoisonComponent.poisonPerSecond * inflictPoisonComponent.inflictionTime * 100;
+            float value = inflictPoisonComponent.poisonPerSecond * inflictPoisonComponent.inflictionTime * unitFactor;
             if (poisonTMP.text != "0")
             {
                 value += float.Parse(poisonTMP.text.Replace(percentSign, ""));
@@ -97,7 +98,7 @@ public static class ItemStats
         Action_RestoreHunger restoreHungerComponent = item.gameObject.GetComponent<Action_RestoreHunger>();
         if (restoreHungerComponent && restoreHungerComponent.restorationAmount != 0)
         {
-            float value = restoreHungerComponent.restorationAmount * 100;
+            float value = restoreHungerComponent.restorationAmount * unitFactor;
             string restorationPercentage = "-" + Mathf.Round(value).ToString() + percentSign;
             hungerTMP.text = restorationPercentage;
             UpdateStats(ref hungerStat, ref index);
@@ -107,7 +108,7 @@ public static class ItemStats
         Action_AddOrRemoveThorns addOrRemoveThornsComponent = item.gameObject.GetComponent<Action_AddOrRemoveThorns>();
         if (addOrRemoveThornsComponent && addOrRemoveThornsComponent.thornCount != 0)
         {
-            float value = addOrRemoveThornsComponent.thornCount * 100 / 20f;
+            float value = addOrRemoveThornsComponent.thornCount * unitFactor / 20f;
             string sign = value > 0 ? "+" : "";
             string restorationPercentage = sign + Mathf.Round(value).ToString() + percentSign;
             thornsTMP.text = restorationPercentage;
@@ -117,7 +118,7 @@ public static class ItemStats
         Action_GiveExtraStamina extraStaminaComponent = item.gameObject.GetComponent<Action_GiveExtraStamina>();
         if (extraStaminaComponent && extraStaminaComponent.amount != 0)
         {
-            string staminaPercentage = "+" + (extraStaminaComponent.amount * 100).ToString() + percentSign;
+            string staminaPercentage = "+" + (extraStaminaComponent.amount * unitFactor).ToString() + percentSign;
             extraStaminaTMP.text = staminaPercentage;
             UpdateStats(ref extraStaminaStat, ref index);
         }
@@ -142,7 +143,7 @@ public static class ItemStats
                 Affliction_AdjustDrowsyOverTime adjustDrowsyOverTime = (Affliction_AdjustDrowsyOverTime)infiniteStamina.drowsyAffliction;
                 float drowsyTime = infiniteStamina.drowsyAffliction.totalTime * adjustDrowsyOverTime.statusPerSecond;
 
-                string drowsyPercentage = "+" + Mathf.Round(drowsyTime * 100).ToString() + percentSign;
+                string drowsyPercentage = "+" + Mathf.Round(drowsyTime * unitFactor).ToString() + percentSign;
                 sleepyTMP.text = drowsyPercentage;
                 UpdateStats(ref sleepyStat, ref index);
 
@@ -162,7 +163,7 @@ public static class ItemStats
 
                 Affliction_FasterBoi fasterBoi = (Affliction_FasterBoi)applyAfflictionComponent.affliction;
 
-                string drowsyPercentage = "+" + Mathf.Round(fasterBoi.drowsyOnEnd * 100).ToString() + percentSign;
+                string drowsyPercentage = "+" + Mathf.Round(fasterBoi.drowsyOnEnd * unitFactor).ToString() + percentSign;
                 sleepyTMP.text = drowsyPercentage;
                 UpdateStats(ref sleepyStat, ref index);
 
@@ -279,7 +280,7 @@ public static class ItemStats
         {
             if (!statusComponent.enabled) continue;
 
-            float value = statusComponent.changeAmount * 100;
+            float value = statusComponent.changeAmount * unitFactor;
             if (value == 0) continue;
             string changePercent = Mathf.Round(value).ToString() + percentSign;
             var statusType = statusComponent.statusType;
