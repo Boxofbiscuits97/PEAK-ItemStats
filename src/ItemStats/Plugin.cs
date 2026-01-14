@@ -71,6 +71,7 @@ public static class ItemStats
         AddNewStat(out GameObject invincibilityStat, out TextMeshProUGUI invincibilityTMP, "GAME/GUIManager/Canvas_HUD/BarGroup/Bar/OutlineMask/Outline/Shield/ShieldIcon", "invincibilityStat");
 
         AddNewStat(out GameObject poisonStat, out TextMeshProUGUI poisonTMP, "GAME/GUIManager/Canvas_HUD/BarGroup/Bar/LayoutGroup/Poison/Icon", "poisonStat", CharacterAfflictions.STATUSTYPE.Poison);
+        AddNewStat(out GameObject thornsStat, out TextMeshProUGUI thornsTMP, "GAME/GUIManager/Canvas_HUD/BarGroup/Bar/LayoutGroup/Thorns/Icon", "thornsStat", CharacterAfflictions.STATUSTYPE.Thorns);
 
 
         Item item = Character.localCharacter.data.currentItem;
@@ -100,6 +101,17 @@ public static class ItemStats
             string restorationPercentage = "-" + Mathf.Round(value).ToString() + percentSign;
             hungerTMP.text = restorationPercentage;
             UpdateStats(ref hungerStat, ref index);
+        }
+        
+        // Each thorn adds 2 units or 5% of Thorns so we need to divide the value by 20
+        Action_AddOrRemoveThorns addOrRemoveThornsComponent = item.gameObject.GetComponent<Action_AddOrRemoveThorns>();
+        if (addOrRemoveThornsComponent && addOrRemoveThornsComponent.thornCount != 0)
+        {
+            float value = addOrRemoveThornsComponent.thornCount * 100 / 20f;
+            string sign = value > 0 ? "+" : "";
+            string restorationPercentage = sign + Mathf.Round(value).ToString() + percentSign;
+            thornsTMP.text = restorationPercentage;
+            UpdateStats(ref thornsStat, ref index);
         }
 
         Action_GiveExtraStamina extraStaminaComponent = item.gameObject.GetComponent<Action_GiveExtraStamina>();
