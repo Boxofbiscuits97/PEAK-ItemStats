@@ -166,7 +166,7 @@ public static class ItemStats
                 sleepyTMP.text = drowsyPercentage;
                 UpdateStats(ref sleepyStat, ref index);
 
-                string staminaTime = fasterBoi.totalTime.ToString() + "sec";
+                string staminaTime = fasterBoi.totalTime.ToString() + " sec";
                 fasterBoiTMP.text = staminaTime;
                 UpdateStats(ref fasterBoiStat, ref index);
             }
