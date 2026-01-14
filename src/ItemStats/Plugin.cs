@@ -291,6 +291,13 @@ public static class ItemStats
                 objectTMP.text = sign + changePercent;
                 UpdateStats(ref objectIcon, ref index);
             }
+
+            if (status == CharacterAfflictions.STATUSTYPE.Spores &&
+                statusType == CharacterAfflictions.STATUSTYPE.Poison && value < 0)
+            {
+                objectTMP.text = changePercent;
+                UpdateStats(ref objectIcon, ref index);
+            }
         }
     }
 
