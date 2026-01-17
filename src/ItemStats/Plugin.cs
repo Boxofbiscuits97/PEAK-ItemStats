@@ -72,6 +72,8 @@ public static class ItemStats
         Initialize(out GameObject hungerStat, out GameObject hungerText, out TextMeshProUGUI hungerTMP);
 
         index = 0;
+        
+        AddNewStat(out GameObject weightStat, out TextMeshProUGUI weightStatTMP, "GAME/GUIManager/Canvas_HUD/BarGroup/Bar/LayoutGroup/Weight/Icon", "weightStat", CharacterAfflictions.STATUSTYPE.Weight);
         AddNewStat(out hungerStat, out hungerTMP, "GAME/GUIManager/Canvas_HUD/BarGroup/Bar/LayoutGroup/Hunger/Icon", "hungerStat", CharacterAfflictions.STATUSTYPE.Hunger);
         AddNewStat(out GameObject extraStaminaStat, out TextMeshProUGUI extraStaminaTMP, "GAME/GUIManager/Canvas_HUD/BarGroup/ExtraStaminaBar/Icon", "extraStaminaStat");
         AddNewStat(out GameObject coldStat, out TextMeshProUGUI coldTMP, "GAME/GUIManager/Canvas_HUD/BarGroup/Bar/LayoutGroup/Cold/Icon", "coldStat", CharacterAfflictions.STATUSTYPE.Cold);
@@ -93,6 +95,22 @@ public static class ItemStats
 
         if (!slotGameObject.transform.Find("Name").GetComponent<TextMeshProUGUI>().enabled) return;
 
+        float itemWeight = item.carryWeight + Ascents.itemWeightModifier;
+        if(itemWeight > 0)
+        {
+            float value = itemWeight * unitFactor / 40f;
+            string weightPercentage = "+" + value.ToString() + percentSign;
+            weightStatTMP.text = weightPercentage;
+            UpdateStats(ref weightStat, ref index);
+        }
+
+        BingBongShieldWhileHolding bingBongShieldComponent = item.gameObject.GetComponent<BingBongShieldWhileHolding>();
+        if (bingBongShieldComponent != null)
+        {
+            invincibilityTMP.text = "Infinite";
+            UpdateStats(ref invincibilityStat, ref index);
+        }
+        
         Action_InflictPoison inflictPoisonComponent = item.gameObject.GetComponent<Action_InflictPoison>();
         if (inflictPoisonComponent && inflictPoisonComponent.enabled)
         {
@@ -293,11 +311,18 @@ public static class ItemStats
         foreach (Action_ModifyStatus statusComponent in statusComponents)
         {
             if (!statusComponent.enabled) continue;
+            if (statusComponent.ifSkeleton != Character.localCharacter.data.isSkeleton) continue;
 
-            float value = statusComponent.changeAmount * unitFactor;
+            float value = Mathf.Round(statusComponent.changeAmount * unitFactor);
             if (value == 0) continue;
-            string changePercent = Mathf.Round(value).ToString() + percentSign;
             var statusType = statusComponent.statusType;
+
+            float existingValue = float.Parse(objectTMP.text.Trim('%'));
+            value += existingValue;
+            
+            if (statusType == CharacterAfflictions.STATUSTYPE.Curse) value = -value; // Invert the value for Curse since a negative value means an increase in curse
+
+            string changePercent = value.ToString() + percentSign;
 
             if (statusType == status)
             {
@@ -311,7 +336,9 @@ public static class ItemStats
                 statusType == CharacterAfflictions.STATUSTYPE.Poison && value < 0)
             {
                 objectTMP.text = changePercent;
+                if (existingValue != 0) index--;
                 UpdateStats(ref objectIcon, ref index);
+                if (existingValue != 0) index--;
             }
         }
     }
